@@ -87,6 +87,8 @@ startGame :-  aggregate_all(count, turncounter(Y), I),
 			 (not(isItYourTurn(I, J, K)) ->
 			      didPrevPlayerMakeSuggestion); usersTurn.
 
+showDatabase :- (findall(X, suspects(X), X), findall(Y, rooms(Y), Y), findall(Z, weapons(Z), Z)), X. %YOUNG!!!!....something?
+
 usersTurn :- writeln('Now it is your turn.'), winCheck, writeln('Are you in a room?'),
 		     read(InRoom),
 		     (InRoom = y ->
