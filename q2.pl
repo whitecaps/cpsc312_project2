@@ -87,7 +87,7 @@ startGame :-  aggregate_all(count, turncounter(Y), I),
 			 (not(isItYourTurn(I, J, K)) ->
 			      didPrevPlayerMakeSuggestion); usersTurn.
 
-usersTurn :- writeln('Now it is your turn.'), writeln('Are you in a room?'),
+usersTurn :- writeln('Now it is your turn.'), winCheck, writeln('Are you in a room?'),
 		     read(InRoom),
 		     (InRoom = y ->
 		     	writeln('Which room are you in?'),
@@ -104,8 +104,8 @@ wereYouProvenWrong :- writeln('Was your suggestion proven WRONG?'),
 
 
 %if there is 1 item in each of the suspects, rooms, and weapons databases, then an accusation should be made.
-winCheck :- aggregate_all(count, suspects(X), Count), aggregate_all(count, rooms(Y), Count), aggregate_all(count, weapons(Z), Count),
-			(((X=1),(Y=1),(Z=1)) -> makeAccusation); endOppsTurn.
+winCheck :- aggregate_all(count, suspects(X), X), aggregate_all(count, rooms(Y), Y), aggregate_all(count, weapons(Z), Z),
+			(((X=1),(Y=1),(Z=1)) -> makeAccusation); true.
 
 makeAccusation :- findall(X, suspects(X), X), getFirst(A, X),
 				  findall(Y, rooms(Y), Y), getFirst(B, Y),
@@ -124,7 +124,7 @@ elimCard :- writeln('Was the card that proved you wrong a suspect, room, or weap
 			); true.
 
 elimSuspect :- writeln('Which suspect was shown to you?'), read(ShownCard),
-			   retract(suspects(ShownCard)),endOppsTurn.
+			   retract(suspects(ShownCard)),write(ShownCard),writeln(' was removed from the database.'),endOppsTurn.
 
 elimRoom :- writeln('Which room was shown to you?'), read(ShownCard),
 			retract(rooms(ShownCard)),endOppsTurn.
@@ -174,12 +174,12 @@ getOppSuspect :- writeln('Who was the suggested SUSPECT?'),
 			   assert(suggestedsuspect(Suspect)).
 
 
-getOppRoom :- writeln('Who was the suggested ROOM?'),
+getOppRoom :- writeln('What was the suggested ROOM?'),
 			   read(Room),
 			   assert(suggestedroom(Room)).
 
 
-getOppWeapon :- writeln('Who was the suggested WEAPON?'),
+getOppWeapon :- writeln('What was the suggested WEAPON?'),
 			    read(Weapon),
 			    assert(suggestedweapon(Weapon)).
 
@@ -199,23 +199,23 @@ elimSuspectIfPossible :- (((findall(X, suspects(X), X),
 				  		 ((findall(A, rooms(A), A),
 				  		 not((suggestedroom(B), member(B, A)))),
 				  		 (findall(C, weapons(C), C),
-				  		 not((suggestedweapon(D), member(D, C)))))) -> retract(suspects(Y))); true.
+				  		 not((suggestedweapon(D), member(D, C)))))) -> retract(suspects(Y)), writeln('Based on the suggestion, the suggested suspect was removed from the database.')); true.
 
 elimRoomIfPossible :- (((findall(X, rooms(X), X), 
 				      (suggestedroom(Y), member(Y, X))), 
 				  	  ((findall(A, suspects(A), A),
 				  	  not((suggestedsuspect(B), member(B, A)))),
 				  	  (findall(C, weapons(C), C),
-				  	  not((suggestedweapon(D), member(D, C)))))) -> retract(rooms(Y))); true.
+				  	  not((suggestedweapon(D), member(D, C)))))) -> retract(rooms(Y)), writeln('Based on the suggestion, the suggested room was removed from the database.')); true.
 
 elimWeaponIfPossible :- (((findall(X, weapons(X), X), 
 				  	    (suggestedweapon(Y), member(Y, X))), 
 				  	    ((findall(A, rooms(A), A),
 				  	    not((suggestedroom(B), member(B, A)))),
 				  		(findall(C, suspects(C), C),
-				  		not((suggestedsuspect(D), member(D, C)))))) -> retract(weapons(Y))); true.
+				  		not((suggestedsuspect(D), member(D, C)))))) -> retract(weapons(Y)), writeln('Based on the suggestion, the suggested weapon was removed from the database.')); true.
 
-endOppsTurn :- writeln('TURN OVER'),assert(turncounter(1)), clearSuggestions, startGame.
+endOppsTurn :- writeln('THE TURN IS OVER'),assert(turncounter(1)), clearSuggestions, startGame.
 
 clearSuggestions :- retractall(suggestedsuspect(X)), retractall(suggestedroom(X)), retractall(suggestedweapon(X)).
 
@@ -225,7 +225,6 @@ member(X,[H|T]) :- member(X,T).
 getFirst(X, [X|T]).
 
 youLose :- writeln('Sorry. You Did Not Win').
-youWin :- writeln('Yay! You won!').
+youWin :- writeln('Yay! You won! Thanks for playing.').
 
-%NEED TO FIX. SHOULD FACTOR IN NUMPLAYERS.
 isItYourTurn(I, J, K) :- ((I =< K), (I == J));((Y is (I mod K)), Y == J, I>K).
